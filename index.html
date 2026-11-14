@@ -1,0 +1,1929 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GBoS GEOAI | Gambia Geospatial Repository</title>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css">
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@turf/turf@7/turf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+
+<style>
+:root{
+ --navy:#102b46;
+ --blue:#176b87;
+ --teal:#159b83;
+ --ink:#182b3a;
+ --muted:#748492;
+ --line:#dce4e9;
+ --paper:#f2f5f7;
+ --white:#fff;
+}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+ font-family:Segoe UI,Arial,sans-serif;
+ color:var(--ink);
+ background:var(--paper);
+}
+header{
+ height:66px;
+ background:var(--navy);
+ color:white;
+ display:flex;
+ align-items:center;
+ justify-content:space-between;
+ padding:0 20px;
+}
+.brand{
+ font-size:17px;
+ font-weight:800;
+ letter-spacing:.7px;
+}
+.brand small{
+ display:block;
+ font-size:9px;
+ color:#b3cbd8;
+ letter-spacing:1.6px;
+ margin-top:4px;
+}
+.headright{
+ text-align:right;
+ font-size:10px;
+ line-height:1.6;
+ color:#d7e5eb;
+}
+main{
+ height:calc(100% - 66px);
+ display:grid;
+ grid-template-columns:290px minmax(300px,1fr) 300px;
+ gap:9px;
+ padding:9px;
+}
+.panel{
+ min-height:0;
+ display:flex;
+ flex-direction:column;
+ overflow:hidden;
+ background:white;
+ border:1px solid var(--line);
+ border-radius:8px;
+}
+.panelhead{
+ padding:13px;
+ background:#fbfcfd;
+ border-bottom:1px solid var(--line);
+}
+.kicker{
+ font-size:9px;
+ font-weight:800;
+ letter-spacing:1.5px;
+ color:var(--teal);
+}
+h2{
+ font-size:15px;
+ color:var(--navy);
+ margin:5px 0 0;
+}
+.scroll{
+ padding:13px;
+ overflow-y:auto;
+ min-height:0;
+}
+.section{margin-bottom:19px}
+.section h3{
+ font-size:10px;
+ letter-spacing:1px;
+ color:#536b7a;
+ margin:0 0 10px;
+}
+label{
+ display:block;
+ font-size:11px;
+ color:#526471;
+ margin:8px 0 5px;
+}
+select,input[type=text]{
+ width:100%;
+ padding:9px;
+ border:1px solid var(--line);
+ border-radius:5px;
+ background:white;
+ font-size:11px;
+ color:var(--ink);
+}
+button{
+ border:0;
+ border-radius:5px;
+ padding:9px 10px;
+ background:var(--blue);
+ color:white;
+ font-size:10px;
+ font-weight:700;
+ cursor:pointer;
+}
+button:hover{filter:brightness(.94)}
+button:disabled{opacity:.5;cursor:wait}
+button.secondary{
+ background:#eaf0f4;
+ color:var(--navy);
+}
+.btnrow{
+ display:flex;
+ gap:7px;
+ margin-top:8px;
+}
+.btnrow button{flex:1}
+.status{
+ background:#f3f6f8;
+ border:1px solid #e9eef1;
+ border-radius:5px;
+ padding:9px;
+ font-size:10px;
+ color:#647684;
+ line-height:1.5;
+ white-space:pre-wrap;
+ overflow-wrap:anywhere;
+}
+.checkrow{
+ display:flex;
+ align-items:flex-start;
+ gap:8px;
+ border-bottom:1px solid #edf1f3;
+ padding:8px 0;
+ font-size:11px;
+ cursor:pointer;
+}
+.checkrow input{
+ margin-top:2px;
+ accent-color:var(--teal);
+}
+.checkrow span{flex:1}
+.layerdesc{
+ display:block;
+ font-size:9px;
+ color:#82909a;
+ margin-top:3px;
+}
+.mapwrap{
+ position:relative;
+ overflow:hidden;
+ min-width:0;
+ border:1px solid var(--line);
+ border-radius:8px;
+ background:#e8edf0;
+}
+#map{height:100%;width:100%;min-height:300px}
+.mapbadge{
+ position:absolute;
+ z-index:500;
+ top:12px;
+ left:12px;
+ background:#ffffffed;
+ padding:9px 12px;
+ border-radius:6px;
+ font-size:10px;
+ box-shadow:0 2px 9px #0002;
+ pointer-events:none;
+}
+.kpis{
+ display:grid;
+ grid-template-columns:1fr 1fr;
+ gap:8px;
+}
+.kpi{
+ border:1px solid var(--line);
+ border-radius:6px;
+ padding:10px;
+ background:#fbfcfd;
+}
+.kpi span{
+ font-size:9px;
+ color:#71818d;
+ text-transform:uppercase;
+}
+.kpi b{
+ display:block;
+ font-size:20px;
+ color:var(--navy);
+ margin-top:6px;
+}
+.chartbox{height:190px}
+.chartbox canvas{max-height:180px}
+.legenditem{
+ display:flex;
+ align-items:center;
+ gap:8px;
+ font-size:10px;
+ margin:7px 0;
+}
+.swatch{
+ width:13px;
+ height:13px;
+ border-radius:3px;
+ flex:none;
+}
+table{
+ width:100%;
+ border-collapse:collapse;
+ font-size:10px;
+}
+td,th{
+ padding:7px 5px;
+ border-bottom:1px solid #edf1f3;
+ text-align:left;
+ vertical-align:top;
+}
+th{color:#687987}
+footer{
+ font-size:9px;
+ color:#82909a;
+ padding:10px;
+ border-top:1px solid var(--line);
+ line-height:1.6;
+}
+.leaflet-popup-content{
+ font-size:11px;
+ line-height:1.5;
+}
+@media(max-width:1000px){
+ main{
+  height:auto;
+  min-height:calc(100% - 66px);
+  grid-template-columns:260px 1fr;
+  grid-template-rows:minmax(480px,65vh) auto;
+ }
+ .right{grid-column:1/-1}
+ .mapwrap{min-height:480px}
+}
+@media(max-width:650px){
+ html,body{height:auto}
+ main{display:flex;flex-direction:column;height:auto}
+ .panel{min-height:280px}
+ .mapwrap{height:65vh;min-height:430px}
+}
+</style>
+</head>
+
+<body>
+
+<header>
+ <div class="brand">
+  GBoS GEOAI
+  <small>GAMBIA OPEN GEOSPATIAL DATA REPOSITORY</small>
+ </div>
+ <div class="headright">
+  GIS / CARTOGRAPHY UNIT<br>
+  GAMBIA BUREAU OF STATISTICS
+ </div>
+</header>
+
+<main>
+
+<!-- LEFT CONTROL PANEL -->
+<section class="panel">
+ <div class="panelhead">
+  <div class="kicker">01 / CONTROL CENTRE</div>
+  <h2>Geographic and data controls</h2>
+ </div>
+
+ <div class="scroll">
+
+  <div class="section">
+   <h3>ADMINISTRATIVE SELECTION</h3>
+
+   <label>Region / LGA</label>
+   <select id="region">
+    <option value="">All regions</option>
+   </select>
+
+   <label>District</label>
+   <select id="district">
+    <option value="">All districts</option>
+   </select>
+
+   <label>Ward</label>
+   <select id="ward">
+    <option value="">All wards</option>
+   </select>
+
+   <div class="btnrow">
+    <button id="applyArea">Apply selection</button>
+    <button class="secondary" id="reset">Reset</button>
+   </div>
+
+   <div id="geoStatus" class="status" style="margin-top:9px">
+    Loading administrative boundaries...
+   </div>
+  </div>
+
+  <div class="section">
+   <h3>BASEMAP</h3>
+   <select id="basemap">
+    <option value="osm">OpenStreetMap</option>
+    <option value="light">Light</option>
+    <option value="dark">Dark</option>
+    <option value="satellite">Satellite</option>
+    <option value="terrain">Terrain</option>
+   </select>
+  </div>
+
+  <div class="section">
+   <h3>SEARCH DATA CATALOGUE</h3>
+   <input id="layerSearch" type="text" placeholder="Search datasets...">
+   <div id="catalogue"></div>
+
+   <div class="btnrow">
+    <button id="loadSelected">Load checked layers</button>
+    <button class="secondary" id="clearLayers">Clear layers</button>
+   </div>
+
+   <div id="layerStatus" class="status" style="margin-top:9px">
+    Choose datasets from the catalogue.
+   </div>
+  </div>
+
+  <div class="section">
+   <h3>MAP TOOLS</h3>
+   <div class="btnrow">
+    <button class="secondary" id="zoomArea">Zoom to area</button>
+    <button class="secondary" id="fitLayers">Fit active layers</button>
+   </div>
+   <div class="btnrow">
+    <button class="secondary" id="drawToggle">Draw / measure</button>
+    <button class="secondary" id="clearDraw">Clear drawing</button>
+   </div>
+  </div>
+
+  <div class="section">
+   <h3>DATA EXPORT</h3>
+   <div class="btnrow">
+    <button id="exportGeoJSON">Export GeoJSON</button>
+    <button class="secondary" id="exportStats">Export CSV</button>
+   </div>
+  </div>
+
+ </div>
+
+ <footer>
+  Produced by Ansu Singhateh<br>
+  GIS Analyst | GIS / Cartography Unit<br>
+  Gambia Bureau of Statistics<br>
+  GBoS GEOAI • Research and educational use
+ </footer>
+</section>
+
+<!-- MAP -->
+<div class="mapwrap">
+ <div class="mapbadge">
+  <b>GAMBIA GEOSPATIAL INTELLIGENCE</b><br>
+  <span id="mapSub">National overview</span>
+ </div>
+ <div id="map"></div>
+</div>
+
+<!-- RIGHT ANALYTICS PANEL -->
+<section class="panel right">
+ <div class="panelhead">
+  <div class="kicker">02 / ANALYTICS</div>
+  <h2>Selected-area intelligence</h2>
+ </div>
+
+ <div class="scroll">
+
+  <div class="section">
+   <h3>AREA INDICATORS</h3>
+   <div class="kpis">
+    <div class="kpi">
+     <span>Boundary features</span>
+     <b id="kBoundary">—</b>
+    </div>
+    <div class="kpi">
+     <span>Active layers</span>
+     <b id="kLayers">0</b>
+    </div>
+    <div class="kpi">
+     <span>Mapped features</span>
+     <b id="kFeatures">0</b>
+    </div>
+    <div class="kpi">
+     <span>Area km²</span>
+     <b id="kArea">—</b>
+    </div>
+   </div>
+  </div>
+
+  <div class="section">
+   <h3>LAYER DISTRIBUTION</h3>
+   <div class="chartbox">
+    <canvas id="layerChart"></canvas>
+   </div>
+  </div>
+
+  <div class="section">
+   <h3>THEMATIC LEGEND</h3>
+   <div class="legenditem"><i class="swatch" style="background:#d6ae42"></i>Farmland / cropland</div>
+   <div class="legenditem"><i class="swatch" style="background:#69a96b"></i>Grassland / meadow</div>
+   <div class="legenditem"><i class="swatch" style="background:#247b48"></i>Forest / woodland</div>
+   <div class="legenditem"><i class="swatch" style="background:#4b9ed1"></i>Water bodies</div>
+   <div class="legenditem"><i class="swatch" style="background:#3a9b91"></i>Wetlands / mangroves</div>
+   <div class="legenditem"><i class="swatch" style="background:#d77a54"></i>Buildings</div>
+   <div class="legenditem"><i class="swatch" style="background:#8b7b70"></i>Roads</div>
+   <div class="legenditem"><i class="swatch" style="background:#9b6ab2"></i>Settlements</div>
+   <div class="legenditem"><i class="swatch" style="background:#d39a35"></i>Schools</div>
+   <div class="legenditem"><i class="swatch" style="background:#c65d65"></i>Health facilities</div>
+   <div class="status">
+    OpenStreetMap feature categories are not equivalent to a complete satellite-derived land-cover classification.
+   </div>
+  </div>
+
+  <div class="section">
+   <h3>DATASET METADATA</h3>
+   <div id="metadata" class="status">
+    Select a dataset to inspect its metadata.
+   </div>
+  </div>
+
+  <div class="section">
+   <h3>FEATURE ATTRIBUTES</h3>
+   <div id="attributes" class="status">
+    Click a mapped feature to inspect its attributes.
+   </div>
+  </div>
+
+  <div class="section">
+   <h3>LOADED DATASETS</h3>
+   <table>
+    <thead>
+     <tr><th>Dataset</th><th>Features</th><th>Source</th></tr>
+    </thead>
+    <tbody id="summaryRows">
+     <tr><td colspan="3">No layers loaded.</td></tr>
+    </tbody>
+   </table>
+  </div>
+
+ </div>
+ <footer>
+  OpenStreetMap contributors. Data completeness and positional accuracy vary by location.
+ </footer>
+</section>
+
+</main>
+
+<script>
+"use strict";
+
+/* =====================================================
+   01 / CONFIGURATION
+===================================================== */
+
+const EA_URL =
+"https://raw.githubusercontent.com/silkysingz94-oss/Agricultural-Land-Cover1/main/Census_EAs_Geo.json";
+
+const OVERPASS_ENDPOINTS = [
+ "https://overpass-api.de/api/interpreter",
+ "https://overpass.kumi.systems/api/interpreter"
+];
+
+const $ = id => document.getElementById(id);
+
+const escapeHTML = value =>
+ String(value ?? "").replace(/[&<>"']/g,c=>({
+  "&":"&amp;",
+  "<":"&lt;",
+  ">":"&gt;",
+  '"':"&quot;",
+  "'":"&#39;"
+ }[c]));
+
+/* =====================================================
+   02 / MAP INITIALIZATION
+===================================================== */
+
+const map = L.map("map",{
+ preferCanvas:true,
+ zoomControl:true
+}).setView([13.45,-15.55],8);
+
+const baseLayers = {
+ osm:L.tileLayer(
+  "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+  {maxZoom:19,attribution:"© OpenStreetMap contributors"}
+ ),
+ light:L.tileLayer(
+  "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png",
+  {maxZoom:20,attribution:"© CARTO"}
+ ),
+ dark:L.tileLayer(
+  "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png",
+  {maxZoom:20,attribution:"© CARTO"}
+ ),
+ satellite:L.tileLayer(
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+  {maxZoom:19,attribution:"© Esri"}
+ ),
+ terrain:L.tileLayer(
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Terrain_Base/MapServer/tile/{z}/{y}/{x}",
+  {maxZoom:13,attribution:"© Esri"}
+ )
+};
+
+baseLayers.osm.addTo(map);
+
+const boundaryGroup = L.geoJSON(null,{
+ style:{
+  color:"#176b87",
+  weight:1,
+  fillColor:"#159b83",
+  fillOpacity:.025
+ },
+ interactive:false
+}).addTo(map);
+
+const selectedGroup = L.geoJSON(null,{
+ style:{
+  color:"#e28a28",
+  weight:3,
+  fillColor:"#e9b45a",
+  fillOpacity:.08,
+  dashArray:"5 4"
+ },
+ interactive:false
+}).addTo(map);
+
+const overlayPane = map.createPane("thematicPane");
+overlayPane.style.zIndex=450;
+
+const drawnItems = new L.FeatureGroup().addTo(map);
+
+let allEAs = null;
+let selectedFeatures = [];
+let selectedMask = null;
+let activeLayers = {};
+let drawControl = null;
+
+/* =====================================================
+   03 / DATA CATALOGUE
+===================================================== */
+
+const layerDefs = [
+ {
+  id:"farmland",
+  cat:"Agriculture and land cover",
+  name:"Farmland and cropland",
+  desc:"Mapped farmland, orchards and crop areas.",
+  source:"OpenStreetMap",
+  tags:[
+   '["landuse"="farmland"]',
+   '["landuse"="orchard"]',
+   '["landuse"="vineyard"]',
+   '["landuse"="plant_nursery"]'
+  ],
+  color:"#d6ae42",
+  type:"Polygon"
+ },
+ {
+  id:"grass",
+  cat:"Agriculture and land cover",
+  name:"Grassland and meadow",
+  desc:"Mapped grassland, pasture and meadow.",
+  source:"OpenStreetMap",
+  tags:[
+   '["landuse"="grass"]',
+   '["landuse"="meadow"]',
+   '["landuse"="pasture"]'
+  ],
+  color:"#69a96b",
+  type:"Polygon"
+ },
+ {
+  id:"forest",
+  cat:"Agriculture and land cover",
+  name:"Forest and woodland",
+  desc:"Mapped forest and woodland areas.",
+  source:"OpenStreetMap",
+  tags:[
+   '["landuse"="forest"]',
+   '["natural"="wood"]'
+  ],
+  color:"#247b48",
+  type:"Polygon"
+ },
+ {
+  id:"water",
+  cat:"Water and environment",
+  name:"Water bodies and waterways",
+  desc:"Rivers, streams, lakes, ponds and reservoirs.",
+  source:"OpenStreetMap",
+  tags:[
+   '["waterway"~"river|stream|canal|drain"]',
+   '["natural"="water"]',
+   '["landuse"="reservoir"]'
+  ],
+  color:"#4b9ed1",
+  type:"Mixed"
+ },
+ {
+  id:"wetland",
+  cat:"Water and environment",
+  name:"Wetlands and mangroves",
+  desc:"Mapped wetlands and mangrove areas.",
+  source:"OpenStreetMap",
+  tags:[
+   '["natural"="wetland"]',
+   '["natural"="mangrove"]'
+  ],
+  color:"#3a9b91",
+  type:"Polygon"
+ },
+ {
+  id:"roads",
+  cat:"Transportation",
+  name:"Road network",
+  desc:"Roads, tracks and mapped access routes.",
+  source:"OpenStreetMap",
+  tags:['["highway"]'],
+  color:"#8b7b70",
+  type:"Line"
+ },
+ {
+  id:"buildings",
+  cat:"Settlements and infrastructure",
+  name:"Building footprints",
+  desc:"Mapped building geometries.",
+  source:"OpenStreetMap",
+  tags:['["building"]'],
+  color:"#d77a54",
+  type:"Polygon"
+ },
+ {
+  id:"settlements",
+  cat:"Settlements and infrastructure",
+  name:"Settlements and places",
+  desc:"Mapped towns, villages and populated places.",
+  source:"OpenStreetMap",
+  tags:[
+   '["place"~"city|town|village|hamlet|suburb|locality"]'
+  ],
+  color:"#9b6ab2",
+  type:"Mixed"
+ },
+ {
+  id:"schools",
+  cat:"Services and facilities",
+  name:"Schools",
+  desc:"Educational facilities.",
+  source:"OpenStreetMap",
+  tags:[
+   '["amenity"="school"]',
+   '["amenity"="college"]',
+   '["amenity"="university"]'
+  ],
+  color:"#d39a35",
+  type:"Point"
+ },
+ {
+  id:"health",
+  cat:"Services and facilities",
+  name:"Health facilities",
+  desc:"Hospitals, clinics and health centres.",
+  source:"OpenStreetMap",
+  tags:[
+   '["amenity"="hospital"]',
+   '["amenity"="clinic"]',
+   '["amenity"="doctors"]'
+  ],
+  color:"#c65d65",
+  type:"Point"
+ },
+ {
+  id:"power",
+  cat:"Energy and utilities",
+  name:"Electricity infrastructure",
+  desc:"Power lines, substations and transformers.",
+  source:"OpenStreetMap",
+  tags:[
+   '["power"="line"]',
+   '["power"="substation"]',
+   '["power"="transformer"]'
+  ],
+  color:"#bd8c38",
+  type:"Mixed"
+ }
+];
+
+/* =====================================================
+   04 / CATALOGUE RENDERING
+===================================================== */
+
+function renderCatalogue(search=""){
+
+ const root=$("catalogue");
+ root.innerHTML="";
+
+ const groups={};
+
+ layerDefs.filter(d=>
+  (d.name+" "+d.cat+" "+d.desc)
+  .toLowerCase().includes(search.toLowerCase())
+ ).forEach(d=>{
+  (groups[d.cat]??=[]).push(d);
+ });
+
+ Object.entries(groups).forEach(([category,defs])=>{
+
+  const heading=document.createElement("div");
+  heading.innerHTML=`
+   <div style="
+    font-size:10px;
+    font-weight:800;
+    color:#176b87;
+    margin:13px 0 5px;
+    text-transform:uppercase">
+    ${escapeHTML(category)}
+   </div>`;
+  root.appendChild(heading);
+
+  defs.forEach(d=>{
+
+   const row=document.createElement("label");
+   row.className="checkrow";
+
+   row.innerHTML=`
+    <input type="checkbox" data-layer="${d.id}"
+     ${activeLayers[d.id]?"checked":""}>
+    <span>
+     <b>${escapeHTML(d.name)}</b>
+     <span class="layerdesc">${escapeHTML(d.desc)}</span>
+    </span>`;
+
+   row.querySelector("input").addEventListener(
+    "change",()=>showMetadata(d)
+   );
+
+   root.appendChild(row);
+  });
+ });
+}
+
+renderCatalogue();
+
+$("layerSearch").addEventListener("input",e=>{
+ renderCatalogue(e.target.value);
+});
+
+/* =====================================================
+   05 / ADMINISTRATIVE BOUNDARIES
+===================================================== */
+
+const fields={
+ region:["RCO","rco","region","REGION","lganame","LGA","lga"],
+ district:["distname","DISTNAME","district","DISTRICT"],
+ ward:["wardname","WARDNAME","ward","WARD"]
+};
+
+function getField(feature,names){
+
+ for(const name of names){
+  const value=feature.properties?.[name];
+
+  if(value!==undefined && value!==null && value!==""){
+   return String(value);
+  }
+ }
+
+ return "";
+}
+
+function uniqueValues(features,field){
+
+ return [...new Set(
+  features.map(f=>getField(f,fields[field])).filter(Boolean)
+ )].sort();
+}
+
+function fillSelect(id,values,placeholder){
+
+ const select=$(id);
+ const old=select.value;
+
+ select.innerHTML=
+  `<option value="">${placeholder}</option>`+
+  values.map(v=>
+   `<option value="${escapeHTML(v)}">${escapeHTML(v)}</option>`
+  ).join("");
+
+ if(values.includes(old))select.value=old;
+}
+
+function updateSelectors(changed){
+
+ if(!allEAs)return;
+
+ if(changed==="region"){
+  $("district").value="";
+  $("ward").value="";
+ }
+
+ if(changed==="district"){
+  $("ward").value="";
+ }
+
+ const features=allEAs.features;
+ const region=$("region").value;
+
+ fillSelect(
+  "region",
+  uniqueValues(features,"region"),
+  "All regions / LGAs"
+ );
+
+ if(region)$("region").value=region;
+
+ const regionFeatures=features.filter(f=>
+  !region || getField(f,fields.region)===region
+ );
+
+ const district=$("district").value;
+
+ fillSelect(
+  "district",
+  uniqueValues(regionFeatures,"district"),
+  "All districts"
+ );
+
+ if(district)$("district").value=district;
+
+ const districtFeatures=regionFeatures.filter(f=>
+  !district || getField(f,fields.district)===district
+ );
+
+ const ward=$("ward").value;
+
+ fillSelect(
+  "ward",
+  uniqueValues(districtFeatures,"ward"),
+  "All wards"
+ );
+
+ if(ward)$("ward").value=ward;
+}
+
+function getSelectedBoundaries(){
+
+ if(!allEAs)return[];
+
+ const region=$("region").value;
+ const district=$("district").value;
+ const ward=$("ward").value;
+
+ return allEAs.features.filter(f=>
+  (!region || getField(f,fields.region)===region) &&
+  (!district || getField(f,fields.district)===district) &&
+  (!ward || getField(f,fields.ward)===ward)
+ );
+}
+
+function makeAreaMask(features){
+
+ if(!features.length)return null;
+
+ try{
+
+  const polygons=features.filter(f=>
+   f.geometry &&
+   ["Polygon","MultiPolygon"].includes(f.geometry.type)
+  );
+
+  if(!polygons.length)return null;
+
+  if(polygons.length===1)return polygons[0];
+
+  const combined=turf.combine({
+   type:"FeatureCollection",
+   features:polygons
+  });
+
+  return combined.features[0]||null;
+
+ }catch(error){
+
+  console.warn("Could not combine boundaries:",error);
+  return null;
+
+ }
+}
+
+function updateAreaStats(features){
+
+ let area=0;
+
+ features.forEach(f=>{
+  try{area+=turf.area(f)}catch(e){}
+ });
+
+ $("kArea").textContent=
+  features.length?(area/1000000).toFixed(1):"—";
+}
+
+function applySelection(){
+
+ if(!allEAs)return;
+
+ selectedFeatures=getSelectedBoundaries();
+
+ selectedGroup.clearLayers();
+ selectedMask=makeAreaMask(selectedFeatures);
+
+ if(selectedFeatures.length){
+
+  selectedGroup.addData({
+   type:"FeatureCollection",
+   features:selectedFeatures
+  });
+
+  map.fitBounds(selectedGroup.getBounds(),{
+   padding:[20,20],
+   maxZoom:13
+  });
+
+ }
+
+ updateAreaStats(selectedFeatures);
+
+ const label=[
+  $("region").value,
+  $("district").value,
+  $("ward").value
+ ].filter(Boolean).join(" · ");
+
+ $("mapSub").textContent=label||"National overview";
+
+ $("geoStatus").textContent=
+  `${selectedFeatures.length.toLocaleString()} EA boundaries selected.`;
+
+ // Existing thematic layers are reloaded to respect the new boundary.
+ Object.values(activeLayers).forEach(item=>{
+  map.removeLayer(item.leaflet);
+ });
+
+ activeLayers={};
+ renderSummary();
+ renderCatalogue($("layerSearch").value);
+
+}
+
+async function loadBoundaries(){
+
+ try{
+
+  const response=await fetch(EA_URL);
+
+  if(!response.ok)throw Error("HTTP "+response.status);
+
+  const data=await response.json();
+
+  if(!data.features?.length){
+   throw Error("GeoJSON contains no features.");
+  }
+
+  allEAs=data;
+
+  boundaryGroup.addData(data);
+
+  updateSelectors();
+
+  $("geoStatus").textContent=
+   `Loaded ${data.features.length.toLocaleString()} EA boundaries.`;
+
+  $("kBoundary").textContent=
+   data.features.length.toLocaleString();
+
+  updateAreaStats(data.features);
+
+  map.fitBounds(boundaryGroup.getBounds(),{padding:[15,15]});
+
+ }catch(error){
+
+  $("geoStatus").textContent=
+   "Boundary loading failed: "+error.message;
+
+  console.error(error);
+
+ }
+}
+
+$("region").addEventListener("change",()=>updateSelectors("region"));
+$("district").addEventListener("change",()=>updateSelectors("district"));
+$("ward").addEventListener("change",()=>updateSelectors("ward"));
+
+$("applyArea").onclick=applySelection;
+
+$("reset").onclick=()=>{
+
+ $("region").value="";
+ $("district").value="";
+ $("ward").value="";
+
+ updateSelectors();
+
+ selectedFeatures=[];
+ selectedMask=null;
+
+ selectedGroup.clearLayers();
+
+ Object.values(activeLayers).forEach(item=>{
+  map.removeLayer(item.leaflet);
+ });
+
+ activeLayers={};
+
+ if(allEAs){
+  boundaryGroup.clearLayers();
+  boundaryGroup.addData(allEAs);
+
+  map.fitBounds(boundaryGroup.getBounds(),{
+   padding:[15,15]
+  });
+
+  updateAreaStats(allEAs.features);
+ }
+
+ $("mapSub").textContent="National overview";
+ $("geoStatus").textContent="National view restored.";
+
+ renderSummary();
+ renderCatalogue($("layerSearch").value);
+};
+
+/* =====================================================
+   06 / BASEMAP
+===================================================== */
+
+$("basemap").addEventListener("change",e=>{
+
+ Object.values(baseLayers).forEach(layer=>{
+  map.removeLayer(layer);
+ });
+
+ baseLayers[e.target.value].addTo(map);
+
+});
+
+/* =====================================================
+   07 / OSM JSON TO GEOJSON
+===================================================== */
+
+function osmToGeoJSON(osm){
+
+ const elements=osm.elements||[];
+
+ const nodes=new Map(
+  elements.filter(e=>e.type==="node")
+  .map(n=>[n.id,n])
+ );
+
+ const features=[];
+
+ for(const node of nodes.values()){
+
+  if(!node.tags || !Object.keys(node.tags).length)continue;
+
+  features.push({
+   type:"Feature",
+   id:"node/"+node.id,
+   geometry:{
+    type:"Point",
+    coordinates:[node.lon,node.lat]
+   },
+   properties:{
+    ...node.tags,
+    _osm_type:"node",
+    _osm_id:node.id
+   }
+  });
+ }
+
+ for(const way of elements.filter(e=>e.type==="way")){
+
+  const coords=(way.nodes||[])
+   .map(id=>nodes.get(id))
+   .filter(Boolean)
+   .map(n=>[n.lon,n.lat]);
+
+  if(coords.length<2)continue;
+
+  const closed=
+   coords.length>3 &&
+   coords[0][0]===coords.at(-1)[0] &&
+   coords[0][1]===coords.at(-1)[1];
+
+  const tags=way.tags||{};
+
+  const polygonTags=[
+   "farmland","orchard","vineyard","plant_nursery",
+   "forest","grass","meadow","pasture",
+   "reservoir","residential","commercial",
+   "industrial","retail"
+  ];
+
+  const isArea=closed&&(
+   tags.building ||
+   polygonTags.includes(tags.landuse) ||
+   tags.natural==="wood" ||
+   tags.natural==="water" ||
+   tags.natural==="wetland" ||
+   tags.natural==="mangrove" ||
+   tags.leisure==="park"
+  );
+
+  features.push({
+   type:"Feature",
+   id:"way/"+way.id,
+   geometry:isArea
+    ?{type:"Polygon",coordinates:[coords]}
+    :{type:"LineString",coordinates:coords},
+   properties:{
+    ...tags,
+    _osm_type:"way",
+    _osm_id:way.id
+   }
+  });
+ }
+
+ return{
+  type:"FeatureCollection",
+  features
+ };
+}
+
+/* =====================================================
+   08 / OVERPASS QUERY
+===================================================== */
+
+function selectedBounds(){
+
+ if(selectedGroup.getLayers().length){
+  return selectedGroup.getBounds();
+ }
+
+ if(boundaryGroup.getLayers().length){
+  return boundaryGroup.getBounds();
+ }
+
+ return L.latLngBounds(
+  [[13.0,-17.0],[13.9,-13.7]]
+ );
+}
+
+function buildOverpassQuery(def,bounds){
+
+ const south=bounds.getSouth();
+ const west=bounds.getWest();
+ const north=bounds.getNorth();
+ const east=bounds.getEast();
+
+ const clauses=def.tags.map(tag=>
+  `nwr${tag}(${south},${west},${north},${east});`
+ ).join("\n");
+
+ return`
+ [out:json][timeout:60];
+ (
+ ${clauses}
+ );
+ out body;
+ >;
+ out skel qt;
+ `;
+}
+
+async function fetchOverpass(query){
+
+ let lastError;
+
+ for(const endpoint of OVERPASS_ENDPOINTS){
+
+  try{
+
+   const response=await fetch(endpoint,{
+    method:"POST",
+    headers:{
+     "Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"
+    },
+    body:"data="+encodeURIComponent(query)
+   });
+
+   if(!response.ok){
+    throw Error("Overpass HTTP "+response.status);
+   }
+
+   const data=await response.json();
+
+   if(data.remark){
+    throw Error(data.remark);
+   }
+
+   return data;
+
+  }catch(error){
+
+   lastError=error;
+   console.warn("Overpass endpoint failed:",endpoint,error);
+
+  }
+ }
+
+ throw lastError||Error("No Overpass endpoint responded.");
+}
+
+/* =====================================================
+   09 / GEOMETRY FILTERING
+===================================================== */
+
+function getBoundaryLines(mask){
+
+ if(!mask)return[];
+
+ try{
+
+  const linework=turf.polygonToLine(mask);
+
+  if(linework.type==="FeatureCollection"){
+   return linework.features;
+  }
+
+  return [linework];
+
+ }catch(error){
+
+  console.warn("Boundary line conversion failed:",error);
+  return[];
+
+ }
+}
+
+function clipLineToArea(feature,mask,boundaryLines){
+
+ const output=[];
+
+ const sourceLines=feature.geometry.type==="LineString"
+  ?[feature]
+  :feature.geometry.coordinates.map(coords=>
+    turf.lineString(coords,feature.properties)
+   );
+
+ sourceLines.forEach(sourceLine=>{
+
+  try{
+
+   if(!turf.booleanIntersects(sourceLine,mask))return;
+
+   let pieces=[sourceLine];
+
+   // Split against every boundary component.
+   boundaryLines.forEach(boundary=>{
+
+    const next=[];
+
+    pieces.forEach(piece=>{
+
+     try{
+
+      const split=turf.lineSplit(piece,boundary);
+
+      if(split.features.length){
+       next.push(...split.features);
+      }else{
+       next.push(piece);
+      }
+
+     }catch(error){
+
+      next.push(piece);
+
+     }
+
+    });
+
+    pieces=next;
+
+   });
+
+   pieces.forEach(piece=>{
+
+    if(!piece.geometry.coordinates ||
+       piece.geometry.coordinates.length<2)return;
+
+    const length=turf.length(piece,{units:"kilometers"});
+
+    if(length<=0)return;
+
+    const midpoint=turf.along(
+     piece,
+     length/2,
+     {units:"kilometers"}
+    );
+
+    if(turf.booleanPointInPolygon(midpoint,mask)){
+
+     piece.properties={...feature.properties};
+     output.push(piece);
+
+    }
+
+   });
+
+  }catch(error){
+
+   console.warn("Line clipping error:",error);
+
+  }
+
+ });
+
+ return output;
+}
+
+function filterToSelectedArea(collection){
+
+ if(!selectedMask || !collection.features.length){
+  return collection;
+ }
+
+ const result=[];
+ const boundaryLines=getBoundaryLines(selectedMask);
+
+ collection.features.forEach(feature=>{
+
+  try{
+
+   const geometry=feature.geometry;
+   if(!geometry)return;
+
+   if(geometry.type==="Point"){
+
+    if(turf.booleanPointInPolygon(feature,selectedMask)){
+     result.push(feature);
+    }
+
+    return;
+   }
+
+   if(geometry.type==="MultiPoint"){
+
+    geometry.coordinates.forEach(coord=>{
+
+     const point=turf.point(coord,feature.properties);
+
+     if(turf.booleanPointInPolygon(point,selectedMask)){
+      result.push(point);
+     }
+
+    });
+
+    return;
+   }
+
+   if(
+    geometry.type==="Polygon" ||
+    geometry.type==="MultiPolygon"
+   ){
+
+    const clipped=turf.intersect(
+     turf.featureCollection([feature,selectedMask])
+    );
+
+    if(clipped){
+
+     clipped.properties={...feature.properties};
+     result.push(clipped);
+
+    }
+
+    return;
+   }
+
+   if(
+    geometry.type==="LineString" ||
+    geometry.type==="MultiLineString"
+   ){
+
+    result.push(
+     ...clipLineToArea(feature,selectedMask,boundaryLines)
+    );
+
+   }
+
+  }catch(error){
+
+   console.warn(
+    "Feature filtering failed:",
+    feature.id || feature.properties?._osm_id,
+    error
+   );
+
+  }
+
+ });
+
+ return{
+  type:"FeatureCollection",
+  features:result
+ };
+}
+
+/* =====================================================
+   10 / METADATA AND POPUPS
+===================================================== */
+
+function showMetadata(def){
+
+ $("metadata").innerHTML=`
+  <b>${escapeHTML(def.name)}</b><br><br>
+  ${escapeHTML(def.desc)}<br><br>
+  <b>Category:</b> ${escapeHTML(def.cat)}<br>
+  <b>Source:</b> ${escapeHTML(def.source)}<br>
+  <b>Geometry:</b> ${escapeHTML(def.type)}<br>
+  <b>Coverage:</b> Current query extent<br>
+  <b>Format:</b> GeoJSON<br>
+  <b>Retrieval:</b> On-demand Overpass API<br>
+  <b>License:</b> OpenStreetMap data is subject to ODbL.
+ `;
+}
+
+function featurePopup(feature,layer){
+
+ layer.on("click",()=>{
+
+  const properties=feature.properties||{};
+
+  $("attributes").innerHTML=
+   "<b>"+escapeHTML(
+    properties.name||
+    properties.landuse||
+    properties.natural||
+    properties.highway||
+    properties.amenity||
+    "Mapped feature"
+   )+"</b><br><br>"+
+   Object.entries(properties)
+    .slice(0,30)
+    .map(([key,value])=>
+     `<b>${escapeHTML(key)}:</b> ${escapeHTML(value)}`
+    ).join("<br>");
+
+ });
+
+ const properties=feature.properties||{};
+
+ const title=
+  properties.name||
+  properties.landuse||
+  properties.natural||
+  properties.highway||
+  properties.amenity||
+  "Mapped feature";
+
+ layer.bindPopup(
+  "<b>"+escapeHTML(title)+"</b><br>"+
+  "OSM ID: "+escapeHTML(properties._osm_id||"Not available")
+ );
+
+}
+
+/* =====================================================
+   11 / THEMATIC LAYER RENDERING
+===================================================== */
+
+function makeLayerStyle(def){
+
+ return{
+  color:def.color,
+  weight:def.id==="roads"?2.5:1.5,
+  opacity:1,
+  fillColor:def.color,
+  fillOpacity:.45
+ };
+}
+
+function renderGeoJSONLayer(collection,def){
+
+ return L.geoJSON(collection,{
+
+  pane:"thematicPane",
+
+  style:()=>makeLayerStyle(def),
+
+  pointToLayer:(feature,latlng)=>{
+
+   return L.circleMarker(latlng,{
+    pane:"thematicPane",
+    radius:5,
+    color:"#ffffff",
+    weight:1.2,
+    fillColor:def.color,
+    fillOpacity:1
+   });
+
+  },
+
+  onEachFeature:featurePopup
+
+ });
+
+}
+
+async function loadLayer(def){
+
+ if(activeLayers[def.id]){
+
+  map.removeLayer(activeLayers[def.id].leaflet);
+  delete activeLayers[def.id];
+
+ }
+
+ const bounds=selectedBounds();
+
+ if(
+  bounds.getNorth()-bounds.getSouth()>1.5 ||
+  bounds.getEast()-bounds.getWest()>2
+ ){
+
+  throw Error(
+   "Selected extent is too large for this query. Select a district or ward."
+  );
+
+ }
+
+ showMetadata(def);
+
+ $("layerStatus").textContent=
+  "Requesting "+def.name+" from OpenStreetMap...";
+
+ const raw=await fetchOverpass(
+  buildOverpassQuery(def,bounds)
+ );
+
+ let collection=osmToGeoJSON(raw);
+
+ const rawCount=collection.features.length;
+
+ if(selectedMask){
+  collection=filterToSelectedArea(collection);
+ }
+
+ const displayLayer=renderGeoJSONLayer(collection,def);
+
+ // Add to map even when the result is empty so state is consistent.
+ displayLayer.addTo(map);
+ displayLayer.bringToFront();
+
+ activeLayers[def.id]={
+  leaflet:displayLayer,
+  data:collection,
+  definition:def,
+  rawCount
+ };
+
+ renderSummary();
+
+ $("layerStatus").textContent=
+  `${def.name}\n`+
+  `Features returned: ${rawCount.toLocaleString()}\n`+
+  `Features inside selected area: ${collection.features.length.toLocaleString()}`;
+
+ return collection.features.length;
+}
+
+/* =====================================================
+   12 / LOAD CHECKED LAYERS
+===================================================== */
+
+$("loadSelected").onclick=async()=>{
+
+ const ids=[
+  ...document.querySelectorAll("input[data-layer]:checked")
+ ].map(input=>input.dataset.layer);
+
+ if(!ids.length){
+
+  $("layerStatus").textContent=
+   "Select at least one dataset first.";
+
+  return;
+ }
+
+ const button=$("loadSelected");
+ button.disabled=true;
+
+ const messages=[];
+
+ for(const id of ids){
+
+  const def=layerDefs.find(d=>d.id===id);
+
+  try{
+
+   const count=await loadLayer(def);
+
+   messages.push(
+    `${def.name}: ${count.toLocaleString()} features displayed`
+   );
+
+  }catch(error){
+
+   messages.push(
+    `${def.name}: ERROR - ${error.message}`
+   );
+
+   console.error(error);
+
+  }
+
+  $("layerStatus").textContent=messages.join("\n");
+
+ }
+
+ button.disabled=false;
+
+ renderCatalogue($("layerSearch").value);
+ renderSummary();
+
+};
+
+/* =====================================================
+   13 / VISIBILITY AND SUMMARY
+===================================================== */
+
+const layerChart=new Chart($("layerChart"),{
+ type:"doughnut",
+ data:{
+  labels:[],
+  datasets:[{
+   data:[],
+   backgroundColor:[
+    "#d6ae42","#69a96b","#247b48",
+    "#4b9ed1","#3a9b91","#8b7b70",
+    "#d77a54","#9b6ab2","#d39a35",
+    "#c65d65","#bd8c38"
+   ],
+   borderWidth:1
+  }]
+ },
+ options:{
+  responsive:true,
+  maintainAspectRatio:false,
+  plugins:{
+   legend:{
+    position:"bottom",
+    labels:{
+     boxWidth:9,
+     font:{size:9}
+    }
+   }
+  }
+ }
+});
+
+function renderSummary(){
+
+ const entries=Object.values(activeLayers);
+
+ $("kLayers").textContent=entries.length;
+
+ $("kFeatures").textContent=
+  entries.reduce(
+   (sum,item)=>sum+item.data.features.length,0
+  ).toLocaleString();
+
+ $("summaryRows").innerHTML=entries.length
+  ?entries.map(item=>`
+   <tr>
+    <td>${escapeHTML(item.definition.name)}</td>
+    <td>${item.data.features.length.toLocaleString()}</td>
+    <td>OSM</td>
+   </tr>
+  `).join("")
+  :'<tr><td colspan="3">No layers loaded.</td></tr>';
+
+ layerChart.data.labels=
+  entries.map(item=>item.definition.name);
+
+ layerChart.data.datasets[0].data=
+  entries.map(item=>item.data.features.length);
+
+ layerChart.update();
+}
+
+$("clearLayers").onclick=()=>{
+
+ Object.values(activeLayers).forEach(item=>{
+  map.removeLayer(item.leaflet);
+ });
+
+ activeLayers={};
+
+ renderCatalogue($("layerSearch").value);
+ renderSummary();
+
+ $("layerStatus").textContent="Thematic layers cleared.";
+
+};
+
+/* =====================================================
+   14 / MAP NAVIGATION
+===================================================== */
+
+$("zoomArea").onclick=()=>{
+
+ if(selectedGroup.getLayers().length){
+
+  map.fitBounds(selectedGroup.getBounds(),{
+   padding:[20,20]
+  });
+
+ }else if(boundaryGroup.getLayers().length){
+
+  map.fitBounds(boundaryGroup.getBounds());
+
+ }
+
+};
+
+$("fitLayers").onclick=()=>{
+
+ const layers=Object.values(activeLayers)
+  .filter(item=>item.data.features.length)
+  .map(item=>item.leaflet);
+
+ if(!layers.length){
+
+  $("layerStatus").textContent=
+   "No visible thematic features to zoom to.";
+
+  return;
+ }
+
+ map.fitBounds(
+  L.featureGroup(layers).getBounds(),
+  {padding:[20,20]}
+ );
+
+};
+
+/* =====================================================
+   15 / DRAWING AND MEASUREMENT
+===================================================== */
+
+$("drawToggle").onclick=()=>{
+
+ if(!drawControl){
+
+  drawControl=new L.Control.Draw({
+
+   draw:{
+    polygon:true,
+    polyline:true,
+    rectangle:true,
+    circle:false,
+    marker:false,
+    circlemarker:false
+   },
+
+   edit:{
+    featureGroup:drawnItems
+   }
+
+  });
+
+  map.addControl(drawControl);
+
+  map.on(L.Draw.Event.CREATED,event=>{
+
+   const layer=event.layer;
+
+   drawnItems.addLayer(layer);
+
+   if(layer instanceof L.Polyline &&
+      !(layer instanceof L.Polygon)){
+
+    const length=turf.length(
+     layer.toGeoJSON(),
+     {units:"kilometers"}
+    );
+
+    layer.bindPopup(
+     "Length: "+length.toFixed(3)+" km"
+    ).openPopup();
+
+   }else if(layer instanceof L.Polygon){
+
+    const area=turf.area(
+     layer.toGeoJSON()
+    )/1000000;
+
+    layer.bindPopup(
+     "Area: "+area.toFixed(3)+" km²"
+    ).openPopup();
+
+   }
+
+  });
+
+ }else{
+
+  map.removeControl(drawControl);
+  drawControl=null;
+
+ }
+
+};
+
+$("clearDraw").onclick=()=>{
+ drawnItems.clearLayers();
+};
+
+/* =====================================================
+   16 / EXPORTS
+===================================================== */
+
+function downloadFile(filename,content,type){
+
+ const blob=new Blob([content],{type});
+ const url=URL.createObjectURL(blob);
+
+ const anchor=document.createElement("a");
+ anchor.href=url;
+ anchor.download=filename;
+ anchor.click();
+
+ setTimeout(()=>URL.revokeObjectURL(url),1000);
+}
+
+$("exportGeoJSON").onclick=()=>{
+
+ const features=Object.values(activeLayers)
+  .flatMap(item=>item.data.features);
+
+ if(!features.length){
+
+  $("layerStatus").textContent=
+   "No thematic features available for export.";
+
+  return;
+ }
+
+ downloadFile(
+  "GBoS_Gambia_GEOAI_Layers.geojson",
+  JSON.stringify({
+   type:"FeatureCollection",
+   features
+  },null,2),
+  "application/geo+json"
+ );
+
+};
+
+$("exportStats").onclick=()=>{
+
+ const rows=[
+  ["Dataset","Features","Raw features returned","Source"],
+  ...Object.values(activeLayers).map(item=>[
+   item.definition.name,
+   item.data.features.length,
+   item.rawCount,
+   "OpenStreetMap"
+  ])
+ ];
+
+ const csv=rows.map(row=>
+  row.map(value=>
+   '"'+String(value).replace(/"/g,'""')+'"'
+  ).join(",")
+ ).join("\n");
+
+ downloadFile(
+  "GBoS_GEOAI_Dataset_Statistics.csv",
+  csv,
+  "text/csv"
+ );
+
+};
+
+/* =====================================================
+   17 / START APPLICATION
+===================================================== */
+
+loadBoundaries();
+
+</script>
+</body>
+</html>
